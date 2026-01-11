@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Random Backgrounds</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        #clock {
+            font-size: 5rem;
+            background: rgba(0,0,0,0.4);
+            padding: 20px 40px;
+            border-radius: 10px;
+        }
+
+        #date {
+            margin-top: 15px;
+            font-size: 2rem;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 25px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="clock">00:00:00.000</div>
+<div id="date">Loading date...</div>
+
+<script>
+    // CLOCK WITH MILLISECONDS + DATE
+    function startClock() {
+        function update() {
+            const now = new Date();
+
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ms = String(now.getMilliseconds()).padStart(3, '0');
+
+            document.getElementById("clock").textContent =
+                `${hours}:${minutes}:${seconds}.${ms}`;
+
+            const dateString = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            document.getElementById("date").textContent = dateString;
+
+            requestAnimationFrame(update);
+        }
+
+        update();
+    }
+    startClock();
+
+
+    // BACKGROUND IMAGE SYSTEM
+    const queue = [];
+    const queueSize = 3;
+    const usedImages = new Set();
+
+    function generateImageURL() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        return `https://picsum.photos/${w}/${h}?unique=${Math.random()}`;
+    }
+
+    function preloadNewImage() {
+        let url;
+
+        do {
+            url = generateImageURL();
+        } while (usedImages.has(url));
+
+        usedImages.add(url);
+
+        const img = new Image();
+        img.src = url;
+        queue.push(img);
+    }
+
+    function maintainQueue() {
+        while (queue.length < queueSize) {
+            preloadNewImage();
+        }
+    }
+
+    function changeBackground() {
+        maintainQueue();
+
+        const nextImage = queue.shift();
+        document.body.style.backgroundImage = `url('${nextImage.src}')`;
+
+        maintainQueue();
+    }
+
+    setInterval(changeBackground, 1000);
+    maintainQueue();
+    changeBackground();
+</script>
+
+</body>
+</html>
